@@ -1,0 +1,24 @@
+warning: in the working copy of 'next.config.mjs', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/next.config.mjs b/next.config.mjs[m
+[1mindex c12d284..060b74a 100644[m
+[1m--- a/next.config.mjs[m
+[1m+++ b/next.config.mjs[m
+[36m@@ -15,16 +15,12 @@[m [mconst nextConfig = {[m
+   },[m
+   images: {[m
+     unoptimized: true,[m
+[31m-    formats: ['image/avif', 'image/webp'],[m
+[31m-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],[m
+[31m-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],[m
+   },[m
+   experimental: {[m
+     webpackBuildWorker: true,[m
+[32m+[m[32m    parallelServerBuildTraces: true,[m
+[32m+[m[32m    parallelServerCompiles: true,[m
+   },[m
+[31m-  output: 'export',[m
+[31m-  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',[m
+[31m-  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',[m
+ }[m
+ [m
+ mergeConfig(nextConfig, userConfig)[m

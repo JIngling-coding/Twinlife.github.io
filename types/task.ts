@@ -1,8 +1,10 @@
 export type TaskStatus = "进行中" | "待办" | "已完成" | "已延期"
 
 export type TaskPeriod = {
-  type: "daily" | "weekly" | "monthly" | "quarterly" | "yearly"
-  interval: number // 每隔多少天/周/月/季度/年
+  type: "daily" | "weekly" | "biweekly" | "monthly" | "yearly" | "quarterly"
+  interval: number
+  dayOfWeek?: number // for weekly and biweekly tasks
+  dayOfMonth?: number // for monthly tasks
   endDate?: string // 结束日期，可选
 }
 
@@ -24,16 +26,18 @@ export type Task = {
   periodIndicator?: string // 周期标识，如 W12, M3, Q2 等
 }
 
-export const getStatusColor = (status: TaskStatus) => {
-  switch (status) {
-    case "进行中":
-      return "text-blue-500 border-blue-500"
-    case "待办":
-      return "text-yellow-500 border-yellow-500"
-    case "已完成":
-      return "text-green-500 border-green-500"
-    case "已延期":
-      return "text-red-500 border-red-500"
+export type Project = {
+  id: string
+  name: string
+  category: string
+  description: string
+  progress: number
+  tasks: {
+    total: number
+    completed: number
   }
+  members: number
+  dueDate: string
+  status: "进行中" | "已完成" | "规划中"
 }
 

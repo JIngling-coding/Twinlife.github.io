@@ -18,6 +18,8 @@ import {
   Coffee,
   ChevronDown,
   Search,
+  Plus,
+  Edit,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,10 +36,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { getTagColors, type priorityColors, cn, getPriorityStyles, getDepartmentStyles } from "@/utils/tag-colors"
 
-import { Plus } from "lucide-react"
 import { NewTaskDialog } from "./new-task-dialog"
 import { NewProjectDialog } from "./new-project-dialog"
 import { NewHabitDialog } from "./new-habit-dialog"
+import { DateEditDialog } from "./date-edit-dialog"
 
 // 项目类型
 type Project = {
@@ -88,7 +90,7 @@ type Habit = {
   completedDays: number[]
 }
 
-function TaskViews() {
+export function TaskViews() {
   const [view, setView] = useState("tasks")
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -109,6 +111,13 @@ function TaskViews() {
 
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false)
   const [isNewHabitDialogOpen, setIsNewHabitDialogOpen] = useState(false)
+
+  // 添加这些状态
+  const [departments, setDepartments] = useState<string[]>(["市场部", "技术部", "人力资源部", "财务部", "运营部"])
+  const [allTags, setAllTags] = useState<string[]>(["重要", "紧急", "长期", "短期", "会议", "报告", "客户", "内部"])
+
+  const [dateEditTask, setDateEditTask] = useState<Task | null>(null)
+  const [isDateEditDialogOpen, setIsDateEditDialogOpen] = useState(false)
 
   // 示例数据
   const [projects, setProjects] = useState<Project[]>([
@@ -539,6 +548,30 @@ function TaskViews() {
     }
   }
 
+  const handleDateClick = (task: Task) => {
+    setDateEditTask(task)
+    setIsDateEditDialogOpen(true)
+  }
+
+  const handleDateEdit = (taskId: string, newDate: string, comment: string) => {
+    setTasks(
+      tasks.map((task) => {
+        if (task.id === taskId) {
+          return { ...task, dueDate: newDate }
+        }
+        if (task.subtasks) {
+          const updatedSubtasks = task.subtasks.map((subtask) =>
+            subtask.id === taskId ? { ...subtask, dueDate: newDate } : subtask,
+          )
+          return { ...task, subtasks: updatedSubtasks }
+        }
+        return task
+      }),
+    )
+    // Here you would typically send the comment to your backend or store it
+    console.log(`Task ${taskId} date changed to ${newDate}. Comment: ${comment}`)
+  }
+
   // Remove the useEffect that was causing the infinite loop
   // We now handle recurring tasks directly in the handleTaskToggle function
 
@@ -761,6 +794,15 @@ function TaskViews() {
                   {/* Remove the checkbox column */}
                   <th className="text-left p-2 font-medium">
                     <div className="flex items-center gap-2">
+                      {/* 新增加号按钮移到最前面 */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => setIsNewTaskDialogOpen(true)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
                       <span className="text-sm text-muted-foreground">任务</span>
                       <div className="relative">
                         <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
@@ -787,43 +829,34 @@ function TaskViews() {
                           <SelectItem value="待办">待办</SelectItem>
                         </SelectContent>
                       </Select>
-                      {/* 新增加号按钮 */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => setIsNewTaskDialogOpen(true)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
                     </div>
                   </th>
-                  <th className="text-left p-2 font-medium">
-                    <div className="flex items-center gap-1">
+                  <th className="text-center p-2 font-medium">
+                    <div className="flex items-center justify-center gap-1">
                       <span className="text-xs text-muted-foreground">项目</span>
                       <ChevronDown className="h-3 w-3 text-muted-foreground" />
                     </div>
                   </th>
-                  <th className="text-left p-2 font-medium">
-                    <div className="flex items-center gap-1">
+                  <th className="text-center p-2 font-medium">
+                    <div className="flex items-center justify-center gap-1">
                       <span className="text-xs text-muted-foreground">截止日期</span>
                       <ChevronDown className="h-3 w-3 text-muted-foreground" />
                     </div>
                   </th>
-                  <th className="text-left p-2 font-medium">
-                    <div className="flex items-center gap-1">
+                  <th className="text-center p-2 font-medium">
+                    <div className="flex items-center justify-center gap-1">
                       <span className="text-xs text-muted-foreground">标签</span>
                       <ChevronDown className="h-3 w-3 text-muted-foreground" />
                     </div>
                   </th>
-                  <th className="text-left p-2 font-medium">
-                    <div className="flex items-center gap-1">
+                  <th className="text-center p-2 font-medium">
+                    <div className="flex items-center justify-center gap-1">
                       <span className="text-xs text-muted-foreground">优先级</span>
                       <ChevronDown className="h-3 w-3 text-muted-foreground" />
                     </div>
                   </th>
-                  <th className="text-left p-2 font-medium">
-                    <div className="flex items-center gap-1">
+                  <th className="text-center p-2 font-medium">
+                    <div className="flex items-center justify-center gap-1">
                       <span className="text-xs text-muted-foreground">部门</span>
                       <ChevronDown className="h-3 w-3 text-muted-foreground" />
                     </div>
@@ -833,7 +866,6 @@ function TaskViews() {
               <tbody>
                 {filteredTasks.map((task) => (
                   <React.Fragment key={task.id}>
-                    {/* Main task row */}
                     <tr className="border-b hover:bg-gray-50">
                       <td className="p-2">
                         <div className="flex items-center gap-2">
@@ -854,31 +886,31 @@ function TaskViews() {
                           )}
                         </div>
                       </td>
-                      <td className="p-2 text-sm">
+                      <td className="p-2 text-sm text-center">
                         <FieldEditPopover
                           field="project"
                           value={task.project}
                           onSave={(value) => handleFieldEdit(task.id, "project", value)}
                         >
-                          {task.project}
+                          <div className="flex justify-center items-center h-full">{task.project}</div>
                         </FieldEditPopover>
                       </td>
-                      <td className="p-2 text-sm">
-                        <FieldEditPopover
-                          field="dueDate"
-                          value={task.dueDate}
-                          onSave={(value) => handleFieldEdit(task.id, "dueDate", value)}
+                      <td className="p-2 text-sm text-center">
+                        <div
+                          className="flex justify-center items-center h-full cursor-pointer group"
+                          onClick={() => handleDateClick(task)}
                         >
-                          {task.dueDate}
-                        </FieldEditPopover>
+                          <span>{task.dueDate}</span>
+                          <Edit className="h-4 w-4 ml-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
                       </td>
-                      <td className="p-2">
+                      <td className="p-2 text-center">
                         <FieldEditPopover
                           field="tags"
                           value={task.tags}
                           onSave={(value) => handleFieldEdit(task.id, "tags", value)}
                         >
-                          <div className="flex gap-1 flex-wrap">
+                          <div className="flex gap-1 flex-wrap justify-center items-center h-full">
                             {task.tags.map((tag) => {
                               const colors = getTagColors(tag)
                               return (
@@ -894,30 +926,34 @@ function TaskViews() {
                           </div>
                         </FieldEditPopover>
                       </td>
-                      <td className="p-2">
+                      <td className="p-2 text-center">
                         <FieldEditPopover
                           field="priority"
                           value={task.priority}
                           options={["高", "中", "低"]}
                           onSave={(value) => handleFieldEdit(task.id, "priority", value)}
                         >
-                          <Badge
-                            variant="outline"
-                            className={`${getPriorityStyles(task.priority as keyof typeof priorityColors)} text-xs px-1 py-0`}
-                          >
-                            {task.priority}
-                          </Badge>
+                          <div className="flex justify-center items-center h-full">
+                            <Badge
+                              variant="outline"
+                              className={`${getPriorityStyles(task.priority as keyof typeof priorityColors)} text-xs px-1 py-0`}
+                            >
+                              {task.priority}
+                            </Badge>
+                          </div>
                         </FieldEditPopover>
                       </td>
-                      <td className="p-2">
+                      <td className="p-2 text-center">
                         <FieldEditPopover
                           field="department"
                           value={task.department}
                           onSave={(value) => handleFieldEdit(task.id, "department", value)}
                         >
-                          <Badge variant="outline" className={`${getDepartmentStyles()} text-xs px-1 py-0`}>
-                            {task.department}
-                          </Badge>
+                          <div className="flex justify-center items-center h-full">
+                            <Badge variant="outline" className={`${getDepartmentStyles()} text-xs px-1 py-0`}>
+                              {task.department}
+                            </Badge>
+                          </div>
                         </FieldEditPopover>
                       </td>
                     </tr>
@@ -941,10 +977,20 @@ function TaskViews() {
                             </Badge>
                           </div>
                         </td>
-                        <td className="p-1 text-xs">{subtask.project}</td>
-                        <td className="p-1 text-xs">{subtask.dueDate}</td>
-                        <td className="p-1">
-                          <div className="flex gap-1 flex-wrap">
+                        <td className="p-1 text-xs text-center">
+                          <div className="flex justify-center items-center h-full">{subtask.project}</div>
+                        </td>
+                        <td className="p-1 text-xs text-center">
+                          <div
+                            className="flex justify-center items-center h-full cursor-pointer group"
+                            onClick={() => handleDateClick(subtask)}
+                          >
+                            <span>{subtask.dueDate}</span>
+                            <Edit className="h-3 w-3 ml-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </td>
+                        <td className="p-1 text-center">
+                          <div className="flex gap-1 flex-wrap justify-center items-center h-full">
                             {subtask.tags.map((tag) => (
                               <Badge key={tag} variant="secondary" className="text-[10px] px-1 py-0">
                                 {tag}
@@ -952,21 +998,25 @@ function TaskViews() {
                             ))}
                           </div>
                         </td>
-                        <td className="p-1">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "text-[10px] px-1 py-0",
-                              getPriorityStyles(subtask.priority as keyof typeof priorityColors),
-                            )}
-                          >
-                            {subtask.priority}
-                          </Badge>
+                        <td className="p-1 text-center">
+                          <div className="flex justify-center items-center h-full">
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[10px] px-1 py-0",
+                                getPriorityStyles(subtask.priority as keyof typeof priorityColors),
+                              )}
+                            >
+                              {subtask.priority}
+                            </Badge>
+                          </div>
                         </td>
-                        <td className="p-1">
-                          <Badge variant="outline" className={cn("text-[10px] px-1 py-0", getDepartmentStyles())}>
-                            {subtask.department}
-                          </Badge>
+                        <td className="p-1 text-center">
+                          <div className="flex justify-center items-center h-full">
+                            <Badge variant="outline" className={cn("text-[10px] px-1 py-0", getDepartmentStyles())}>
+                              {subtask.department}
+                            </Badge>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1215,7 +1265,14 @@ function TaskViews() {
       />
 
       {/* 新增新建任务对话框 */}
-      <NewTaskDialog open={isNewTaskDialogOpen} onOpenChange={setIsNewTaskDialogOpen} onSave={handleNewTask} />
+      <NewTaskDialog
+        open={isNewTaskDialogOpen}
+        onOpenChange={setIsNewTaskDialogOpen}
+        onSave={handleNewTask}
+        projects={projects}
+        departments={departments}
+        tags={allTags}
+      />
       <NewProjectDialog
         open={isNewItemDialogOpen && newItemType === "project"}
         onOpenChange={setIsNewItemDialogOpen}
@@ -1232,10 +1289,15 @@ function TaskViews() {
         onSave={handleNewProject}
       />
       <NewHabitDialog open={isNewHabitDialogOpen} onOpenChange={setIsNewHabitDialogOpen} onSave={handleNewHabit} />
+      <DateEditDialog
+        task={dateEditTask}
+        open={isDateEditDialogOpen}
+        onOpenChange={setIsDateEditDialogOpen}
+        onSave={handleDateEdit}
+      />
     </div>
   )
 }
 
-export { TaskViews }
 export default TaskViews
 

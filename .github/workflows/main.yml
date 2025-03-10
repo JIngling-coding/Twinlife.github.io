@@ -34,41 +34,47 @@ jobs:
           NEXT_TELEMETRY_DISABLED: 1
           NODE_OPTIONS: --max-old-space-size=4096
 
-      # 安装并配置腾讯云CLI，用于调试
-      - name: Install and configure Tencent Cloud CLI
+      # 检查环境变量是否正确设置
+      - name: Check environment variables
         run: |
-          echo "安装腾讯云CLI..."
-          pip install tccli
-          echo "配置腾讯云CLI..."
-          tccli configure set secretId ${{ secrets.TENCENT_SECRET_ID }}
-          tccli configure set secretKey ${{ secrets.TENCENT_SECRET_KEY }}
-          tccli configure set region ${{ secrets.TENCENT_REGION }}
-          echo "检查存储桶权限..."
-          tccli cos get-bucket-acl --bucket ${{ secrets.TENCENT_BUCKET }} || echo "获取存储桶ACL失败，可能是权限问题"
-          echo "尝试列出存储桶内容..."
-          tccli cos list-objects --bucket ${{ secrets.TENCENT_BUCKET }} || echo "列出存储桶内容失败，可能是权限问题"
+          echo "检查环境变量是否设置..."
+          if [ -z "${{ secrets.TENCENT_SECRET_ID }}" ]; then echo "错误: TENCENT_SECRET_ID 未设置"; exit 1; fi
+          if [ -z "${{ secrets.TENCENT_SECRET_KEY }}" ]; then echo "错误: TENCENT_SECRET_KEY 未设置"; exit 1; fi
+          if [ -z "${{ secrets.TENCENT_BUCKET }}" ]; then echo "错误: TENCENT_BUCKET 未设置"; exit 1; fi
+          if [ -z "${{ secrets.TENCENT_REGION }}" ]; then echo "错误: TENCENT_REGION 未设置"; exit 1; fi
+          echo "环境变量已正确设置"
+          echo "存储桶: ${{ secrets.TENCENT_BUCKET }}"
+          echo "地区: ${{ secrets.TENCENT_REGION }}"
 
-      # 使用coscmd进行上传，提供更详细的错误信息
-      - name: Install and configure coscmd
+      # 使用腾讯云官方的另一个GitHub Action
+      - name: Deploy to Tencent COS
+        uses: zkqiang/tencent-cos-action@v0.1.0
+        with:
+          args: upload -r -s ./out/ /
+          secret_id: ${{ secrets.TENCENT_SECRET_ID }}
+          secret_key: ${{ secrets.TENCENT_SECRET_KEY }}
+          bucket: ${{ secrets.TENCENT_BUCKET }}
+          region: ${{ secrets.TENCENT_REGION }}
+
+      # 如果上面的Action失败，尝试使用另一种方法
+      - name: Deploy to Tencent COS (Alternative Method)
+        if: ${{ failure() }}
         run: |
-          echo "安装coscmd..."
+          echo "尝试使用另一种方法部署..."
+          # 安装并配置coscmd
           pip install coscmd
-          echo "配置coscmd..."
-          coscmd config -a ${{ secrets.TENCENT_SECRET_ID }} -s ${{ secrets.TENCENT_SECRET_KEY }} -b ${{ secrets.TENCENT_BUCKET }} -r ${{ secrets.TENCENT_REGION }}
-          echo "测试coscmd连接..."
-          coscmd list || echo "列出存储桶内容失败，可能是权限问题"
-
-      - name: Upload to COS using coscmd
-        run: |
-          echo "开始上传文件到腾讯云COS..."
-          # 检查out目录是否存在
-          if [ ! -d "out" ]; then
-            echo "错误: out目录不存在，构建可能失败"
-            exit 1
-          fi
-          # 使用-v参数启用详细输出
-          coscmd upload -rfs --delete -v out/ / || { echo "上传失败，请检查权限和存储桶配置"; exit 1; }
-          echo "上传完成"
+          # 使用-e参数显示详细错误信息
+          coscmd config -a ${{ secrets.TENCENT_SECRET_ID }} -s ${{ secrets.TENCENT_SECRET_KEY }} -b ${{ secrets.TENCENT_BUCKET }} -r ${{ secrets.TENCENT_REGION }} -e
+          # 尝试列出存储桶内容
+          echo "尝试列出存储桶内容..."
+          coscmd list -a || echo "列出存储桶内容失败，可能是权限问题或存储桶名称错误"
+          # 尝试上传一个测试文件
+          echo "尝试上传测试文件..."
+          echo "test" > test.txt
+          coscmd upload test.txt test.txt || echo "上传测试文件失败，可能是权限问题"
+          # 尝试上传out目录
+          echo "尝试上传out目录..."
+          coscmd upload -rs out/ / || echo "上传out目录失败，可能是权限问题或目录不存在"
 
       - name: Output deployment URL
         run: |

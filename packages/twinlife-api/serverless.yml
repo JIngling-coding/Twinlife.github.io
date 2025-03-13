@@ -1,13 +1,13 @@
-component: http
+component: scf
 name: twinlife-api
 app: twinlife
 stage: dev
 
 inputs:
   src: ./dist
-  region: ap-guangzhou
+  handler: index.handler
   runtime: Nodejs16.13
-  functionName: ${name}
+  region: ap-guangzhou
   description: Twinlife API Service
   memorySize: 128
   timeout: 10
@@ -25,15 +25,12 @@ inputs:
       NODE_ENV: production
   
   events:
-    - apigw:
-        parameters:
-          endpoints:
-            - path: /auth/register
-              method: POST
-              enableCORS: true
-            - path: /auth/login
-              method: POST
-              enableCORS: true
-            - path: /auth/code
-              method: POST
-              enableCORS: true 
+    - http:
+        name: http-trigger
+        enable: true
+        transport: HTTPS
+        integratedResponse: true
+        cors: true
+        protocols:
+          - http
+          - https 

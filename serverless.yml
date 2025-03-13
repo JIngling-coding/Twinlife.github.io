@@ -1,0 +1,30 @@
+component: scf
+name: twinlife-api
+app: twinlife
+stage: dev
+inputs:
+  src: ./dist
+  handler: index.handler
+  runtime: Nodejs16.13
+  region: ap-guangzhou
+  description: Twinlife API服务
+  memorySize: 128
+  timeout: 10
+  environment:
+    variables:
+      NODE_ENV: production
+  events:
+    - apigw:
+        parameters:
+          protocols:
+            - http
+            - https
+          serviceName: serverless
+          description: Twinlife API Gateway
+          environment: release
+          endpoints:
+            - path: /
+              method: ANY
+              enableCORS: true
+              function:
+                isIntegratedResponse: true 

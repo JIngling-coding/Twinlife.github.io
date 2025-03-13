@@ -1,0 +1,83 @@
+name: Deploy to Tencent Cloud COS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          echo "开始安装依赖..."
+          npm install --legacy-peer-deps
+          echo "依赖安装完成"
+
+      - name: Build
+        run: |
+          echo "开始构建项目..."
+          npm run build
+          echo "构建完成"
+          ls -la out/
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      # 检查环境变量是否正确设置
+      - name: Check environment variables
+        run: |
+          echo "检查环境变量是否设置..."
+          if [ -z "${{ secrets.TENCENT_SECRET_ID }}" ]; then echo "错误: TENCENT_SECRET_ID 未设置"; exit 1; fi
+          if [ -z "${{ secrets.TENCENT_SECRET_KEY }}" ]; then echo "错误: TENCENT_SECRET_KEY 未设置"; exit 1; fi
+          if [ -z "${{ secrets.TENCENT_BUCKET }}" ]; then echo "错误: TENCENT_BUCKET 未设置"; exit 1; fi
+          if [ -z "${{ secrets.TENCENT_REGION }}" ]; then echo "错误: TENCENT_REGION 未设置"; exit 1; fi
+          echo "环境变量已正确设置"
+          echo "存储桶: ${{ secrets.TENCENT_BUCKET }}"
+          echo "地区: ${{ secrets.TENCENT_REGION }}"
+
+      # 使用腾讯云官方的另一个GitHub Action
+      - name: Deploy to Tencent COS
+        uses: zkqiang/tencent-cos-action@v0.1.0
+        with:
+          args: upload -r -s ./out/ /
+          secret_id: ${{ secrets.TENCENT_SECRET_ID }}
+          secret_key: ${{ secrets.TENCENT_SECRET_KEY }}
+          bucket: ${{ secrets.TENCENT_BUCKET }}
+          region: ${{ secrets.TENCENT_REGION }}
+
+      # 如果上面的Action失败，尝试使用另一种方法
+      - name: Deploy to Tencent COS (Alternative Method)
+        if: ${{ failure() }}
+        run: |
+          echo "尝试使用另一种方法部署..."
+          # 安装并配置coscmd
+          pip install coscmd
+          # 使用-e参数显示详细错误信息
+          coscmd config -a ${{ secrets.TENCENT_SECRET_ID }} -s ${{ secrets.TENCENT_SECRET_KEY }} -b ${{ secrets.TENCENT_BUCKET }} -r ${{ secrets.TENCENT_REGION }} -e
+          # 尝试列出存储桶内容
+          echo "尝试列出存储桶内容..."
+          coscmd list -a || echo "列出存储桶内容失败，可能是权限问题或存储桶名称错误"
+          # 尝试上传一个测试文件
+          echo "尝试上传测试文件..."
+          echo "test" > test.txt
+          coscmd upload test.txt test.txt || echo "上传测试文件失败，可能是权限问题"
+          # 尝试上传out目录
+          echo "尝试上传out目录..."
+          coscmd upload -rs out/ / || echo "上传out目录失败，可能是权限问题或目录不存在"
+
+      - name: Output deployment URL
+        run: |
+          echo "部署完成！"
+          echo "网站地址: https://${{ secrets.TENCENT_BUCKET }}.cos.${{ secrets.TENCENT_REGION }}.myqcloud.com/index.html"
+          echo "如果您配置了自定义域名，请使用您的自定义域名访问"

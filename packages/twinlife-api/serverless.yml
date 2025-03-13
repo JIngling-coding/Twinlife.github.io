@@ -1,0 +1,39 @@
+component: http
+name: twinlife-api
+app: twinlife
+stage: dev
+
+inputs:
+  src: ./dist
+  region: ap-guangzhou
+  runtime: Nodejs16.13
+  functionName: ${name}
+  description: Twinlife API Service
+  memorySize: 128
+  timeout: 10
+  environment:
+    variables:
+      DB_HOST: gz-cdb-atwbmi17.sql.tencentcdb.com
+      DB_PORT: 22423
+      DB_USER: root
+      DB_PASSWORD: km9906219327L#
+      DB_DATABASE: twinlife
+      JWT_SECRET: your-secret-key
+      JWT_EXPIRES_IN: 7d
+      CODE_EXPIRES_IN: 300
+      CODE_LENGTH: 6
+      NODE_ENV: production
+  
+  events:
+    - apigw:
+        parameters:
+          endpoints:
+            - path: /auth/register
+              method: POST
+              enableCORS: true
+            - path: /auth/login
+              method: POST
+              enableCORS: true
+            - path: /auth/code
+              method: POST
+              enableCORS: true 

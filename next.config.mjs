@@ -22,8 +22,9 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
-  basePath: process.env.NODE_ENV === 'production' ? '/Twinlife.github.io' : '',
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
   assetPrefix: process.env.NODE_ENV === 'production' ? '/Twinlife.github.io/' : '',
+  trailingSlash: true,
 }
 
 mergeConfig(nextConfig, userConfig)

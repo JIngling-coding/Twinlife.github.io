@@ -8,11 +8,13 @@ on:
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '16'
           
@@ -25,6 +27,7 @@ jobs:
         run: |
           cd web
           npm run build
+          touch out/.nojekyll
           
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -35,10 +38,10 @@ jobs:
   deploy-api:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '16'
           
@@ -52,10 +55,16 @@ jobs:
           cd packages/twinlife-api
           npm run build
           
+      - name: Install Serverless CLI
+        run: npm install -g serverless
+          
       - name: Deploy to Tencent Cloud
-        uses: tencent-actions/tencent-serverless-action@v1
-        with:
-          secret_id: ${{ secrets.TENCENT_SECRET_ID }}
-          secret_key: ${{ secrets.TENCENT_SECRET_KEY }}
-          region: ap-guangzhou
-          working_directory: ./packages/twinlife-api 
+        run: |
+          cd packages/twinlife-api
+          export TENCENT_SECRET_ID=${{ secrets.TENCENT_SECRET_ID }}
+          export TENCENT_SECRET_KEY=${{ secrets.TENCENT_SECRET_KEY }}
+          export SLS_GEO_LOCATION=no-cn
+          serverless deploy
+        env:
+          TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }} 

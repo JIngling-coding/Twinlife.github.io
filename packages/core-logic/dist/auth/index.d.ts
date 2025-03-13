@@ -1,6 +1,7 @@
 /**
  * 认证相关功能
  */
+import jwt from 'jsonwebtoken';
 /**
  * 哈希密码
  * @param password 原始密码
@@ -21,14 +22,14 @@ export declare function verifyPassword(password: string, hashedPassword: string)
  * @param expiresIn 过期时间
  * @returns JWT令牌
  */
-export declare function generateToken(payload: any, secret: string, expiresIn: string): string;
+export declare function generateToken(payload: Record<string, any>, secret: string, expiresIn: string): string;
 /**
  * 验证JWT令牌
  * @param token JWT令牌
  * @param secret 密钥
  * @returns 解码后的负载
  */
-export declare function verifyToken(token: string, secret: string): any;
+export declare function verifyToken(token: string, secret: string): jwt.JwtPayload | null;
 /**
  * 生成随机验证码
  * @param length 验证码长度

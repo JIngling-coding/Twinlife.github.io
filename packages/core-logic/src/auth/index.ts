@@ -32,7 +32,7 @@ export async function verifyPassword(password: string, hashedPassword: string): 
  * @param expiresIn 过期时间
  * @returns JWT令牌
  */
-export function generateToken(payload: any, secret: string, expiresIn: string): string {
+export function generateToken(payload: Record<string, any>, secret: string, expiresIn: string): string {
   return jwt.sign(payload, secret, { expiresIn });
 }
 
@@ -42,9 +42,9 @@ export function generateToken(payload: any, secret: string, expiresIn: string): 
  * @param secret 密钥
  * @returns 解码后的负载
  */
-export function verifyToken(token: string, secret: string): any {
+export function verifyToken(token: string, secret: string): jwt.JwtPayload | null {
   try {
-    return jwt.verify(token, secret);
+    return jwt.verify(token, secret) as jwt.JwtPayload;
   } catch (error) {
     return null;
   }

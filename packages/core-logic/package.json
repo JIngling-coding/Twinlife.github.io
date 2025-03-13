@@ -1,20 +1,22 @@
 {
   "name": "@twinlife/core-logic",
   "version": "1.0.0",
+  "private": true,
   "description": "可复用的业务逻辑",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsc -w"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.4",
-    "@types/jsonwebtoken": "^9.0.3",
-    "typescript": "^5.2.2"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3"
   }
 }

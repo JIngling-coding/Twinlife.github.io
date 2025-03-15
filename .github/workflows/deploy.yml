@@ -11,21 +11,20 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: '18'
           
       - name: Install Dependencies
+        run: npm install
+          
+      - name: Build Frontend
         run: |
           cd web
           npm install
-          
-      - name: Build
-        run: |
-          cd web
           npm run build
           touch out/.nojekyll
           
@@ -38,33 +37,36 @@ jobs:
   deploy-api:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: '18'
           
       - name: Install Dependencies
+        run: npm install
+          
+      - name: Build Core Logic
+        run: |
+          cd packages/core-logic
+          npm install
+          npm run build
+          
+      - name: Build API
         run: |
           cd packages/twinlife-api
           npm install
-          
-      - name: Build
-        run: |
-          cd packages/twinlife-api
           npm run build
           
-      - name: Install Serverless CLI
-        run: npm install -g serverless
+      - name: Install Serverless Components
+        run: npm install -g @serverless/components
           
       - name: Deploy to Tencent Cloud
         run: |
           cd packages/twinlife-api
-          export TENCENT_SECRET_ID=${{ secrets.TENCENT_SECRET_ID }}
-          export TENCENT_SECRET_KEY=${{ secrets.TENCENT_SECRET_KEY }}
           export SLS_GEO_LOCATION=no-cn
-          serverless deploy
+          components deploy
         env:
           TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }} 

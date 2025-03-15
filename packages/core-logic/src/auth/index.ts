@@ -3,7 +3,7 @@
  */
 
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions, Secret } from 'jsonwebtoken';
 
 /**
  * 哈希密码
@@ -29,11 +29,13 @@ export async function verifyPassword(password: string, hashedPassword: string): 
  * 生成JWT令牌
  * @param payload 令牌负载
  * @param secret 密钥
- * @param expiresIn 过期时间
+ * @param expiresIn 过期时间（如 '1h', '7d' 等）
  * @returns JWT令牌
  */
-export function generateToken(payload: Record<string, any>, secret: string, expiresIn: string): string {
-  return jwt.sign(payload, secret, { expiresIn });
+export function generateToken(payload: Record<string, any>, secret: Secret, expiresIn: string | number): string {
+  // @ts-ignore: jsonwebtoken 类型定义问题
+  const options: SignOptions = { expiresIn };
+  return jwt.sign(payload, secret, options);
 }
 
 /**

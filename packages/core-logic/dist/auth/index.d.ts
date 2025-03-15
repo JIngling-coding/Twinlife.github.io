@@ -1,7 +1,7 @@
 /**
  * 认证相关功能
  */
-import jwt from 'jsonwebtoken';
+import jwt, { Secret } from 'jsonwebtoken';
 /**
  * 哈希密码
  * @param password 原始密码
@@ -19,10 +19,10 @@ export declare function verifyPassword(password: string, hashedPassword: string)
  * 生成JWT令牌
  * @param payload 令牌负载
  * @param secret 密钥
- * @param expiresIn 过期时间
+ * @param expiresIn 过期时间（如 '1h', '7d' 等）
  * @returns JWT令牌
  */
-export declare function generateToken(payload: Record<string, any>, secret: string, expiresIn: string): string;
+export declare function generateToken(payload: Record<string, any>, secret: Secret, expiresIn: string | number): string;
 /**
  * 验证JWT令牌
  * @param token JWT令牌

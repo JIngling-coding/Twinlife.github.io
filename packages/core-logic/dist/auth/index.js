@@ -35,11 +35,13 @@ async function verifyPassword(password, hashedPassword) {
  * 生成JWT令牌
  * @param payload 令牌负载
  * @param secret 密钥
- * @param expiresIn 过期时间
+ * @param expiresIn 过期时间（如 '1h', '7d' 等）
  * @returns JWT令牌
  */
 function generateToken(payload, secret, expiresIn) {
-    return jsonwebtoken_1.default.sign(payload, secret, { expiresIn });
+    // @ts-ignore: jsonwebtoken 类型定义问题
+    const options = { expiresIn };
+    return jsonwebtoken_1.default.sign(payload, secret, options);
 }
 /**
  * 验证JWT令牌
